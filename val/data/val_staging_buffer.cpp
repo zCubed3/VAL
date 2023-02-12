@@ -4,21 +4,22 @@
 #include <val/data/val_buffer.h>
 
 ValStagingBuffer::ValStagingBuffer(size_t size, uint32_t usage_flags, ValInstance *p_val_instance) {
-    val_staging_buffer = new ValBuffer(
-            size,
-            VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-            VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT,
-            p_val_instance);
+    ValBufferCreateInfo create_info {};
+    create_info.size = size;
 
-    val_final_buffer = new ValBuffer(
-            size,
-            VK_BUFFER_USAGE_TRANSFER_DST_BIT | usage_flags,
-            0,
-            p_val_instance);
+    create_info.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+    create_info.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT;
+
+    val_staging_buffer = ValBuffer::create_buffer(&create_info, p_val_instance);
+
+    create_info.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | usage_flags;
+    create_info.flags = 0;
+
+    val_final_buffer = ValBuffer::create_buffer(&create_info, p_val_instance);
 }
 
 void ValStagingBuffer::write(void *data, ValInstance *p_val_instance, size_t offset, size_t size) const {
-    val_staging_buffer->write(data, p_val_instance, offset, size);
+    val_staging_buffer->write(data, offset, size, p_val_instance);
 }
 
 void ValStagingBuffer::copy_buffer(VkCommandBuffer vk_command_buffer) const {

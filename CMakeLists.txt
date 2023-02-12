@@ -11,6 +11,7 @@ set(VAL_SOURCES
         "val/val_queue.cpp"
         "val/data/val_buffer.cpp"
         "val/data/val_staging_buffer.cpp"
+        #"val/data/val_pooled_buffer.cpp"
         "val/images/val_image.cpp"
         "val/pipelines/val_render_pass.cpp"
         "val/pipelines/val_render_pass_builder.cpp"

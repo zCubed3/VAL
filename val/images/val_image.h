@@ -41,6 +41,30 @@ struct ValImageCreateInfo {
     ValSamplerCreateInfo sampler_info {};
 };
 
+enum ValCubemapFace {
+    VAL_CUBEMAP_FACE_RIGHT,
+    VAL_CUBEMAP_FACE_LEFT,
+    VAL_CUBEMAP_FACE_UP,
+    VAL_CUBEMAP_FACE_DOWN,
+    VAL_CUBEMAP_FACE_FRONT,
+    VAL_CUBEMAP_FACE_BACK
+};
+
+struct ValImageSliceInfo {
+    VkOffset3D offset {0, 0, 0};
+    VkExtent3D extent {1, 1, 1};
+};
+
+struct ValImageCubemapFaceWriteInfo {
+    ValCubemapFace face;
+
+    int offset = 0;
+    int row_length = 0;
+
+    bool manual_slice = false;
+    ValImageSliceInfo slice;
+};
+
 class ValBuffer;
 
 // Wrapper around a texture
@@ -53,6 +77,7 @@ protected:
 
 public:
     uint32_t mip_levels = 1;
+    uint32_t layer_count = 1;
 
     VkExtent3D vk_extent {};
     VkImage vk_image = nullptr;
@@ -63,8 +88,20 @@ public:
 
     static ValImage *create(ValImageCreateInfo *p_create_info, ValInstance *p_val_instance);
 
-    void write_bytes(unsigned char *bytes, VkCommandBuffer vk_command_buffer, ValInstance *p_val_instance);
-    void post_write(ValInstance *p_val_instance);
+    // TODO: Don't always expect RGBA?
+    // TODO: Don't always expect linear
+
+    // Writes the buffer directly to the image, is unsafe for cubemaps!
+    // For cubemaps it's recommended to use the write_cubemap functions!
+    void write_whole(VkCommandBuffer vk_command_buffer);
+    void write_cubemap_face(ValImageCubemapFaceWriteInfo* p_write_info, VkCommandBuffer vk_command_buffer);
+
+    void write_buffer_data(unsigned char* bytes, size_t length, size_t offset, ValInstance *p_val_instance);
+
+    void begin_write(size_t buffer_size, VkCommandBuffer vk_command_buffer, ValInstance *p_val_instance);
+    void end_write(VkCommandBuffer vk_command_buffer);
+
+    void cleanup_write(ValInstance* p_val_instance);
 
     void transfer_layout(VkImageLayout old_layout, VkImageLayout new_layout, VkCommandBuffer vk_command_buffer);
     void generate_mips(VkCommandBuffer vk_command_buffer);

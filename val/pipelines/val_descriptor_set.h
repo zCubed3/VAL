@@ -7,6 +7,7 @@
 #include <val/val_releasable.h>
 
 class ValBuffer;
+class ValBufferSection;
 class ValImage;
 
 // TODO: Support textures
@@ -16,7 +17,10 @@ struct ValDescriptorSetWriteInfo {
     uint32_t offset = 0;
 
     VkDescriptorType type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+
     ValBuffer *val_buffer = nullptr;
+    ValBufferSection *val_buffer_section = nullptr;
+
     ValImage *val_image = nullptr;
 };
 

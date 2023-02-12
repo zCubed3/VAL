@@ -11,8 +11,14 @@ void ValDescriptorSet::write_binding(ValDescriptorSetWriteInfo *p_write_info) {
     if (p_write_info->type == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER) {
         buffer_info = new VkDescriptorBufferInfo();
         buffer_info->buffer = p_write_info->val_buffer->vk_buffer;
-        buffer_info->offset = 0;
-        buffer_info->range = static_cast<uint32_t>(p_write_info->val_buffer->size);
+
+        if (p_write_info->val_buffer_section) {
+            buffer_info->offset = p_write_info->val_buffer_section->get_offset();
+            buffer_info->range = p_write_info->val_buffer_section->get_size();
+        } else {
+            buffer_info->offset = 0;
+            buffer_info->range = static_cast<uint32_t>(p_write_info->val_buffer->size);
+        }
 
         vk_buffer_infos.push_back(buffer_info);
     }
@@ -44,7 +50,7 @@ void ValDescriptorSet::write_binding(ValDescriptorSetWriteInfo *p_write_info) {
 void ValDescriptorSet::write_binding_and_buffer(ValInstance *p_val_instance, ValDescriptorSetWriteInfo *p_write_info, void *data) {
     write_binding(p_write_info);
 
-    p_write_info->val_buffer->write(data, p_val_instance);
+    p_write_info->val_buffer->write(data, 0, p_val_instance);
 }
 
 void ValDescriptorSet::update_set(ValInstance *p_val_instance) {

@@ -16,6 +16,7 @@ ValImage *ValImage::create(ValImageCreateInfo *p_create_info, ValInstance *p_val
 
     VkImageType image_type;
     VkImageViewType view_type;
+    uint32_t image_flags = 0;
 
     switch (p_create_info->dimensions) {
         case ValImageCreateInfo::DIMENSIONS_1D:
@@ -35,12 +36,14 @@ ValImage *ValImage::create(ValImageCreateInfo *p_create_info, ValInstance *p_val
 
         case ValImageCreateInfo::DIMENSIONS_CUBE:
             image_type = VK_IMAGE_TYPE_2D;
+            image_flags |= VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
             view_type = VK_IMAGE_VIEW_TYPE_CUBE;
             break;
     }
 
+    uint32_t layer_count = p_create_info->array_size;
     if (p_create_info->dimensions == ValImageCreateInfo::DIMENSIONS_CUBE) {
-        p_create_info->array_size = 6;
+        layer_count = 6;
     }
 
     // Calculate the amount of mipmaps we can handle with this texture
@@ -58,13 +61,14 @@ ValImage *ValImage::create(ValImageCreateInfo *p_create_info, ValInstance *p_val
     image_info.extent.height = p_create_info->extent.height;
     image_info.extent.depth = p_create_info->extent.depth;
     image_info.mipLevels = mip_levels;
-    image_info.arrayLayers = p_create_info->array_size;
+    image_info.arrayLayers = layer_count;
     image_info.samples = p_create_info->samples;
     image_info.format = p_create_info->format;
     image_info.tiling = VK_IMAGE_TILING_OPTIMAL; // TODO: Do we need other image tiling types?
     image_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED; // TODO: Do we need other layouts?
     image_info.usage = p_create_info->usage_flags;
     image_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE; // TODO: Do we need other sharing modes?
+    image_info.flags = image_flags;
 
     VkImage vk_image = nullptr;
     if (vkCreateImage(p_val_instance->vk_device, &image_info, nullptr, &vk_image) != VK_SUCCESS) {
@@ -99,7 +103,7 @@ ValImage *ValImage::create(ValImageCreateInfo *p_create_info, ValInstance *p_val
     image_view_info.subresourceRange.baseMipLevel = 0;
     image_view_info.subresourceRange.levelCount = mip_levels;
     image_view_info.subresourceRange.baseArrayLayer = 0;
-    image_view_info.subresourceRange.layerCount = 1;
+    image_view_info.subresourceRange.layerCount = layer_count;
 
     VkImageView vk_image_view = nullptr;
     if (vkCreateImageView(p_val_instance->vk_device, &image_view_info, nullptr, &vk_image_view) != VK_SUCCESS) {
@@ -151,6 +155,7 @@ ValImage *ValImage::create(ValImageCreateInfo *p_create_info, ValInstance *p_val
     image->vk_aspect_flags = p_create_info->aspect_flags;
     image->autogen_mips = true;
     image->mip_levels = mip_levels;
+    image->layer_count = layer_count;
 
 #ifdef DEBUG
     std::cout << "Vulkan: 0x" << image << " created ValImage::vk_image" << std::endl;
@@ -162,17 +167,7 @@ ValImage *ValImage::create(ValImageCreateInfo *p_create_info, ValInstance *p_val
     return image;
 }
 
-void ValImage::write_bytes(unsigned char *bytes, VkCommandBuffer vk_command_buffer, ValInstance *p_val_instance) {
-    // We need to allocate a staging buffer
-    // TODO: Don't always expect RGBA?
-    val_buffer = new ValBuffer(
-            vk_extent.width * vk_extent.height * 4,
-            VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-            VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT,
-            p_val_instance);
-
-    val_buffer->write(bytes, p_val_instance);
-
+void ValImage::write_whole(VkCommandBuffer vk_command_buffer) {
     VkBufferImageCopy copy_region{};
     copy_region.bufferOffset = 0;
     copy_region.bufferRowLength = 0;
@@ -181,12 +176,10 @@ void ValImage::write_bytes(unsigned char *bytes, VkCommandBuffer vk_command_buff
     copy_region.imageSubresource.aspectMask = vk_aspect_flags;
     copy_region.imageSubresource.mipLevel = 0;
     copy_region.imageSubresource.baseArrayLayer = 0;
-    copy_region.imageSubresource.layerCount = 1;
+    copy_region.imageSubresource.layerCount = layer_count;
 
     copy_region.imageOffset = {0, 0, 0};
     copy_region.imageExtent = vk_extent;
-
-    transfer_layout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, vk_command_buffer);
 
     vkCmdCopyBufferToImage(vk_command_buffer,
                            val_buffer->vk_buffer,
@@ -194,11 +187,67 @@ void ValImage::write_bytes(unsigned char *bytes, VkCommandBuffer vk_command_buff
                            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
                            1,
                            &copy_region);
+}
 
+void ValImage::write_cubemap_face(ValImageCubemapFaceWriteInfo *p_write_info, VkCommandBuffer vk_command_buffer) {
+    VkBufferImageCopy copy_region{};
+
+    copy_region.bufferOffset = p_write_info->offset;
+    copy_region.bufferRowLength = p_write_info->row_length;
+    copy_region.bufferImageHeight = 0;
+
+    copy_region.imageSubresource.aspectMask = vk_aspect_flags;
+    copy_region.imageSubresource.mipLevel = 0;
+    copy_region.imageSubresource.baseArrayLayer = p_write_info->face;
+    copy_region.imageSubresource.layerCount = 1;
+
+    if (p_write_info->manual_slice) {
+        copy_region.imageOffset = p_write_info->slice.offset;
+        copy_region.imageExtent = p_write_info->slice.extent;
+    } else {
+        copy_region.imageOffset = {0, 0, 0};
+        copy_region.imageExtent = vk_extent;
+    }
+
+    vkCmdCopyBufferToImage(vk_command_buffer,
+                           val_buffer->vk_buffer,
+                           vk_image,
+                           VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                           1,
+                           &copy_region);
+}
+
+void ValImage::write_buffer_data(unsigned char *bytes, size_t length, size_t offset, ValInstance *p_val_instance) {
+    if (bytes != nullptr) {
+        val_buffer->write(bytes, offset, length, p_val_instance);
+    }
+}
+
+void ValImage::begin_write(size_t buffer_size, VkCommandBuffer vk_command_buffer, ValInstance *p_val_instance) {
+    ValBufferCreateInfo create_info {};
+    create_info.size = buffer_size;
+
+    create_info.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+    create_info.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT;
+
+    val_buffer = ValBuffer::create_buffer(&create_info, p_val_instance);
+
+    transfer_layout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, vk_command_buffer);
+}
+
+void ValImage::end_write(VkCommandBuffer vk_command_buffer) {
     if (autogen_mips) {
         generate_mips(vk_command_buffer);
     } else {
         transfer_layout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, vk_command_buffer);
+    }
+}
+
+void ValImage::cleanup_write(ValInstance *p_val_instance) {
+    if (val_buffer != nullptr) {
+        val_buffer->release(p_val_instance);
+        delete val_buffer;
+        val_buffer = nullptr;
     }
 }
 
@@ -215,7 +264,7 @@ void ValImage::transfer_layout(VkImageLayout old_layout, VkImageLayout new_layou
     barrier.subresourceRange.baseMipLevel = 0;
     barrier.subresourceRange.levelCount = mip_levels;
     barrier.subresourceRange.baseArrayLayer = 0;
-    barrier.subresourceRange.layerCount = 1;
+    barrier.subresourceRange.layerCount = layer_count;
 
     VkPipelineStageFlags source_stage = 0;
     VkPipelineStageFlags destination_stage = 0;
@@ -258,7 +307,7 @@ void ValImage::generate_mips(VkCommandBuffer vk_command_buffer) {
     barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
     barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
     barrier.subresourceRange.baseArrayLayer = 0;
-    barrier.subresourceRange.layerCount = 1;
+    barrier.subresourceRange.layerCount = layer_count;
     barrier.subresourceRange.levelCount = 1;
 
     int32_t mip_width = static_cast<int32_t>(vk_extent.width);
@@ -288,13 +337,13 @@ void ValImage::generate_mips(VkCommandBuffer vk_command_buffer) {
         blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         blit.srcSubresource.mipLevel = i - 1;
         blit.srcSubresource.baseArrayLayer = 0;
-        blit.srcSubresource.layerCount = 1;
+        blit.srcSubresource.layerCount = layer_count;
         blit.dstOffsets[0] = { 0, 0, 0 };
         blit.dstOffsets[1] = { mip_width > 1 ? mip_width / 2 : 1, mip_height > 1 ? mip_height / 2 : 1, 1 };
         blit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         blit.dstSubresource.mipLevel = i;
         blit.dstSubresource.baseArrayLayer = 0;
-        blit.dstSubresource.layerCount = 1;
+        blit.dstSubresource.layerCount = layer_count;
 
         vkCmdBlitImage(vk_command_buffer,
                        vk_image,
@@ -341,14 +390,6 @@ void ValImage::generate_mips(VkCommandBuffer vk_command_buffer) {
                          nullptr,
                          1,
                          &barrier);
-}
-
-void ValImage::post_write(ValInstance *p_val_instance) {
-    if (val_buffer != nullptr) {
-        val_buffer->release(p_val_instance);
-        delete val_buffer;
-        val_buffer = nullptr;
-    }
 }
 
 void ValImage::release(ValInstance *p_val_instance) {
