@@ -6,7 +6,7 @@
 #include <vector>
 #include <vulkan/vulkan.h>
 
-namespace val {
+namespace VAL {
     struct ValShaderModuleCreateInfo {
         enum Stage {
             STAGE_VERTEX,

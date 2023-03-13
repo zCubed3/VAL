@@ -6,7 +6,7 @@
 
 #include <val/pipelines/val_descriptor_set_info.hpp>
 
-namespace val {
+namespace VAL {
     class ValInstance;
 
     class ValDescriptorSetBuilderSetInfo {

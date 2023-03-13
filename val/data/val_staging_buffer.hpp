@@ -6,7 +6,7 @@
 #include <vk_mem_alloc.h>
 #include <vulkan/vulkan.h>
 
-namespace val {
+namespace VAL {
     class ValInstance;
     class ValBuffer;
 

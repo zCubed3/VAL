@@ -6,7 +6,7 @@
 #include <iostream>
 #endif
 
-namespace val {
+namespace VAL {
     ValBuffer *ValBuffer::create_buffer(ValBufferCreateInfo *p_create_info, ValInstance *p_val_instance) {
         if (p_create_info == nullptr || p_val_instance == nullptr) {
             return nullptr;

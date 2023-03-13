@@ -2,7 +2,7 @@
 
 #include <val/val_instance.hpp>
 
-namespace val {
+namespace VAL {
     bool ValQueue::create_pool(ValInstance *p_val_instance) {
         uint32_t flags;
         switch (type) {

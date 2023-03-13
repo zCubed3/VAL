@@ -6,7 +6,7 @@
 
 typedef struct SDL_Window SDL_Window;
 
-namespace val {
+namespace VAL {
     class ValRenderPass;
 
     // All types of render target can be created via this info

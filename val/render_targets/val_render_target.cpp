@@ -5,7 +5,7 @@
 #include <val/render_targets/val_window_render_target.h>
 #include <val/val_instance.hpp>
 
-namespace val {
+namespace VAL {
     bool ValRenderTarget::get_wait_for_image() {
         return false;
     }

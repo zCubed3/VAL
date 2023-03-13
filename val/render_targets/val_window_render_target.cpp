@@ -7,7 +7,7 @@
 #include <val/pipelines/val_render_pass.hpp>
 #include <val/val_instance.hpp>
 
-namespace val {
+namespace VAL {
     VkExtent2D ValWindowRenderTarget::get_extent(ValInstance *p_val_instance) {
         return vk_extent;
     }

@@ -5,7 +5,7 @@
 #include <vk_mem_alloc.h>
 #include <vulkan/vulkan.h>
 
-namespace val {
+namespace VAL {
     struct ValSamplerCreateInfo {
         VkFilter mag_filter = VK_FILTER_LINEAR;
         VkFilter min_filter = VK_FILTER_LINEAR;

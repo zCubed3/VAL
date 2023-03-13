@@ -2,7 +2,7 @@
 
 #include <val/val_instance.hpp>
 
-namespace val {
+namespace VAL {
     void ValDescriptorSetInfo::write_binding(ValDescriptorSetWriteInfo *p_write_info) {
         if (val_descriptor_set != nullptr) {
             val_descriptor_set->write_binding(p_write_info);

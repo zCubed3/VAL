@@ -7,7 +7,7 @@
 #include <val/pipelines/val_descriptor_set.hpp>
 #include <val/val_releasable.hpp>
 
-namespace val {
+namespace VAL {
     class ValDescriptorSetInfo : public ValReleasable {
     public:
         VkDescriptorSetLayout vk_descriptor_set_layout = nullptr;

@@ -5,7 +5,7 @@
 #include <SDL_vulkan.h>
 #endif
 
-namespace val {
+namespace VAL {
 #if defined(SDL_SUPPORT)
     std::vector<ValExtension> ValExtension::get_sdl_instance_extensions(SDL_Window *p_window) {
         uint32_t count = 0;

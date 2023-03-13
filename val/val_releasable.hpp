@@ -1,7 +1,7 @@
 #ifndef VAL_RELEASABLE_HPP
 #define VAL_RELEASABLE_HPP
 
-namespace val {
+namespace VAL {
     class ValInstance;
 
     class ValReleasable {

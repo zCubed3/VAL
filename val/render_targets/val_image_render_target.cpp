@@ -3,7 +3,7 @@
 #include <val/pipelines/val_render_pass.hpp>
 #include <val/val_instance.hpp>
 
-namespace val {
+namespace VAL {
     VkFramebuffer ValImageRenderTarget::get_framebuffer(ValInstance *p_val_instance) {
         return vk_framebuffer;
     }

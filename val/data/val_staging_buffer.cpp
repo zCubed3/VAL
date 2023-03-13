@@ -3,7 +3,7 @@
 #include <val/data/val_buffer.hpp>
 #include <val/val_instance.hpp>
 
-namespace val {
+namespace VAL {
     ValStagingBuffer::ValStagingBuffer(size_t size, uint32_t usage_flags, ValInstance *p_val_instance) {
         ValBufferCreateInfo create_info{};
         create_info.size = size;

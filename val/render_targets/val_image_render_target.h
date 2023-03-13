@@ -4,7 +4,7 @@
 #include <val/images/val_image.hpp>
 #include <val/render_targets/val_render_target.h>
 
-namespace val {
+namespace VAL {
     class ValImageRenderTarget : public ValRenderTarget {
     protected:
         VkFramebuffer get_framebuffer(ValInstance *p_val_instance) override;

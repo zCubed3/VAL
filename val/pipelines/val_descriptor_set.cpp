@@ -4,7 +4,7 @@
 
 #include <val/images/val_image.hpp>
 
-namespace val {
+namespace VAL {
     void ValDescriptorSet::write_binding(ValDescriptorSetWriteInfo *p_write_info) {
         VkDescriptorBufferInfo *buffer_info = nullptr;
         VkDescriptorImageInfo *image_info = nullptr;

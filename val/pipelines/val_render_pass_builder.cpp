@@ -2,7 +2,7 @@
 
 #include <val/val_instance.hpp>
 
-namespace val {
+namespace VAL {
     void ValRenderPassBuilder::push_attachment(ValRenderPassAttachmentInfo *p_attachment_info) {
         if (p_attachment_info == nullptr) {
             return;

@@ -6,7 +6,7 @@
 #include <val/pipelines/val_shader_module.hpp>
 #include <val/val_instance.hpp>
 
-namespace val {
+namespace VAL {
     void ValPipelineBuilder::push_module(ValShaderModule *p_val_shader_module) {
         // Make sure we don't have a duplicate
         bool replaced = false;

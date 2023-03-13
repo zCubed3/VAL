@@ -9,7 +9,7 @@
 #include <iostream>
 #endif
 
-namespace val {
+namespace VAL {
     ValImage *ValImage::create(ValImageCreateInfo *p_create_info, ValInstance *p_val_instance) {
         if (p_create_info == nullptr) {
             return nullptr;

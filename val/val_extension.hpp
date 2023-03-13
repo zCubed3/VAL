@@ -8,7 +8,7 @@
 typedef struct SDL_Window SDL_Window;
 #endif
 
-namespace val {
+namespace VAL {
     // TODO: Make extension sets for certain features? Ex: Raytracing?
     struct ValExtension {
         enum ExtensionFlags {

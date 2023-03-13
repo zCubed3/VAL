@@ -7,7 +7,7 @@
 #include <val/pipelines/val_pipeline.hpp>
 #include <val/pipelines/val_vertex_input_builder.hpp>
 
-namespace val {
+namespace VAL {
     class ValInstance;
     class ValShaderModule;
     class ValDescriptorSetInfo;

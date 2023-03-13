@@ -2,7 +2,7 @@
 
 #include <val/val_instance.hpp>
 
-namespace val {
+namespace VAL {
     void ValShaderModule::release(ValInstance *p_val_instance) {
         ValReleasable::release(p_val_instance);
 

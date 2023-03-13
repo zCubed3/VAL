@@ -14,7 +14,7 @@
 #include <val/val_queue.hpp>
 
 // TODO: Frames in flight?
-namespace val {
+namespace VAL {
     struct ValInstancePresentPreferences {
         bool use_sRGB = false;
         bool use_32bit_depth = false;

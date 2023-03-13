@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <vector>
 
-namespace val {
+namespace VAL {
     // TODO: Make extension sets for certain features? Ex: Raytracing?
     struct ValLayer {
         enum LayerFlags {

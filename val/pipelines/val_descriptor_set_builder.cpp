@@ -3,7 +3,7 @@
 #include <val/pipelines/val_descriptor_set_info.hpp>
 #include <val/val_instance.hpp>
 
-namespace val {
+namespace VAL {
     void ValDescriptorSetBuilderSetInfo::push_binding(VkDescriptorSetLayoutBinding vk_binding) {
         bindings.push_back(vk_binding);
 

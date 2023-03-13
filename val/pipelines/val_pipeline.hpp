@@ -4,7 +4,7 @@
 #include <val/val_releasable.hpp>
 #include <vulkan/vulkan.h>
 
-namespace val {
+namespace VAL {
     class ValPipeline : public ValReleasable {
     public:
         VkPipeline vk_pipeline = nullptr;

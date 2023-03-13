@@ -8,7 +8,7 @@
 
 #include <val/val_releasable.hpp>
 
-namespace val {
+namespace VAL {
     class ValInstance;
     class ValBuffer;
 

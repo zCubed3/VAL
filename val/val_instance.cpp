@@ -11,7 +11,7 @@
 
 // TODO: Verbosity
 
-namespace val {
+namespace VAL {
     ValInstance::CreationError ValInstance::last_error = ValInstance::ERR_NONE;
 
     std::vector<ValExtension> ValInstance::validate_instance_extensions(ValInstanceCreateInfo *p_create_info) {

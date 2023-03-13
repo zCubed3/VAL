@@ -8,7 +8,7 @@
 
 typedef struct SDL_Window SDL_Window;
 
-namespace val {
+namespace VAL {
     class ValInstance;
     class ValImage;
     class ValRenderPass;

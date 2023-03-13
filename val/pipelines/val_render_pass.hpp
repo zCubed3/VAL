@@ -4,7 +4,7 @@
 #include <val/val_releasable.hpp>
 #include <vulkan/vulkan.h>
 
-namespace val {
+namespace VAL {
     class ValRenderPass : public ValReleasable {
     public:
         VkRenderPass vk_render_pass = nullptr;

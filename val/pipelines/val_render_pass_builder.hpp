@@ -5,7 +5,7 @@
 #include <vector>
 #include <vulkan/vulkan.h>
 
-namespace val {
+namespace VAL {
     class ValInstance;
 
     // TODO: Multiple subpasses
