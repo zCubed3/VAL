@@ -1,5 +1,7 @@
 #include "val_instance.hpp"
 
+#include <stdexcept>
+
 #include <val/pipelines/val_render_pass_builder.hpp>
 
 #ifdef SDL_SUPPORT
@@ -144,9 +146,9 @@ namespace val {
 
         VkApplicationInfo app_info{};
         app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-        app_info.pApplicationName = p_create_info->application_name;
+        app_info.pApplicationName = p_create_info->application_name.c_str();
         app_info.applicationVersion = application_version;
-        app_info.pEngineName = p_create_info->engine_name;
+        app_info.pEngineName = p_create_info->engine_name.c_str();
         app_info.engineVersion = engine_version;
         app_info.apiVersion = vulkan_version;
 
@@ -497,6 +499,10 @@ namespace val {
     }
 
     bool ValInstance::cache_surface_info(VkInstance vk_instance, VkSurfaceKHR vk_surface, VkPhysicalDevice vk_gpu) {
+        if (vk_surface == nullptr) {
+            throw std::runtime_error("vk_surface was nullptr!");
+        }
+
         uint32_t enumeration_count;
 
         vkGetPhysicalDeviceSurfaceFormatsKHR(vk_gpu, vk_surface, &enumeration_count, nullptr);
@@ -504,8 +510,7 @@ namespace val {
         vkGetPhysicalDeviceSurfaceFormatsKHR(vk_gpu, vk_surface, &enumeration_count, vk_supported_surface_formats.data());
 
         if (enumeration_count == 0) {
-            // TODO: Error no formats available!
-            return false;
+            throw std::runtime_error("No supported surface formats found!");
         }
 
         enumeration_count = 0;

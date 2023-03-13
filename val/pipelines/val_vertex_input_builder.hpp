@@ -11,12 +11,15 @@ protected:
     uint32_t total_size = 0;
 
 public:
-    enum AttributeDataType {
+    enum class AttributeDataType {
         // TODO: Other data types?
-        ATTRIBUTE_DATA_TYPE_FLOAT,
-        ATTRIBUTE_DATA_TYPE_VEC2,
-        ATTRIBUTE_DATA_TYPE_VEC3,
-        ATTRIBUTE_DATA_TYPE_VEC4
+
+        // Floating point types
+        Float, FVec2, FVec3, FVec4,
+
+        // TODO: Integer types
+
+        // TODO: Double types
     };
 
     void push_attribute(AttributeDataType type);

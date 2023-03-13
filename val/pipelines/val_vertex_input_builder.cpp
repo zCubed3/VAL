@@ -5,22 +5,22 @@ void ValVertexInputBuilder::push_attribute(AttributeDataType type) {
     VkFormat format;
 
     switch (type) {
-        case ATTRIBUTE_DATA_TYPE_FLOAT:
+        case AttributeDataType::Float:
             size = sizeof(float);
             format = VK_FORMAT_R32_SFLOAT;
             break;
 
-        case ATTRIBUTE_DATA_TYPE_VEC2:
+        case AttributeDataType::FVec2:
             size = sizeof(float) * 2;
             format = VK_FORMAT_R32G32_SFLOAT;
             break;
 
-        case ATTRIBUTE_DATA_TYPE_VEC3:
+        case AttributeDataType::FVec3:
             size = sizeof(float) * 3;
             format = VK_FORMAT_R32G32B32_SFLOAT;
             break;
 
-        case ATTRIBUTE_DATA_TYPE_VEC4:
+        case AttributeDataType::FVec4:
             size = sizeof(float) * 4;
             format = VK_FORMAT_R32G32B32A32_SFLOAT;
             break;

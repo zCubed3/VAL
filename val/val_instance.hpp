@@ -49,8 +49,8 @@ namespace val {
 
         std::vector<ValQueue::QueueType> requested_queues;
 
-        const char *engine_name;
-        const char *application_name;
+        std::string engine_name = "Unknown Engine";
+        std::string application_name = "VAL Application";
         VulkanAPIVersion version = VulkanAPIVersion::API_VERSION_1_0;
 
         uint32_t application_major_version = 1;
