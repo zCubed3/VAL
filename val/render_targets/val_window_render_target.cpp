@@ -87,7 +87,7 @@ namespace VAL {
         swapchain_create_info.surface = vk_surface;
         swapchain_create_info.minImageCount = image_count;
         swapchain_create_info.imageFormat = p_val_instance->present_info->vk_color_format;
-        swapchain_create_info.imageColorSpace = p_val_instance->present_info->vk_colorspace;
+        swapchain_create_info.imageColorSpace = p_val_instance->present_info->vk_color_space;
         swapchain_create_info.imageExtent = vk_extent;
         swapchain_create_info.imageArrayLayers = 1;
         swapchain_create_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;

@@ -13,27 +13,29 @@
 #include <val/val_layer.hpp>
 #include <val/val_queue.hpp>
 
+#include <optional>
+
 // TODO: Frames in flight?
 namespace VAL {
     struct ValInstancePresentPreferences {
-        bool use_sRGB = false;
-        bool use_32bit_depth = false;
-        bool use_vsync = true;
+        bool sRGB = false;
+        bool depth32Bit = false;
+        bool vsync = true;
     };
 
     struct ValPresentInfo {
         VkFormat vk_color_format;
-        VkColorSpaceKHR vk_colorspace;
+        VkColorSpaceKHR vk_color_space;
         VkFormat vk_depth_format;
         VkPresentModeKHR vk_present_mode;
     };
 
     struct ValInstanceCreateInfo {
-        enum VulkanAPIVersion {
-            API_VERSION_1_0,
-            API_VERSION_1_1,
-            API_VERSION_1_2,
-            API_VERSION_1_3
+        enum class VulkanAPIVersion {
+            Version1_0,
+            Version1_1,
+            Version1_2,
+            Version1_3
         };
 
         enum VerbosityFlags {
@@ -50,12 +52,12 @@ namespace VAL {
         std::vector<ValQueue::QueueType> requested_queues;
 
         std::string engine_name = "Unknown Engine";
-        std::string application_name = "VAL Application";
-        VulkanAPIVersion version = VulkanAPIVersion::API_VERSION_1_0;
+        std::string app_name = "VAL Application";
+        VulkanAPIVersion version = VulkanAPIVersion::Version1_0;
 
-        uint32_t application_major_version = 1;
-        uint32_t application_minor_version = 0;
-        uint32_t application_patch_version = 0;
+        uint32_t app_major_version = 1;
+        uint32_t app_minor_version = 0;
+        uint32_t app_patch_version = 0;
 
         uint32_t engine_major_version = 1;
         uint32_t engine_minor_version = 0;
@@ -72,7 +74,7 @@ namespace VAL {
 #ifdef SDL_SUPPORT
         // TODO: Multiple window support?
         SDL_Window *p_sdl_window = nullptr;
-        ValInstancePresentPreferences *p_present_preferences = nullptr;
+        std::optional<ValInstancePresentPreferences> present_preferences;
 #endif
     };
 
@@ -97,13 +99,13 @@ namespace VAL {
 
         ValInstance() = default;
 
-        static std::vector<ValExtension> validate_instance_extensions(ValInstanceCreateInfo *p_create_info);
-        static std::vector<ValExtension> validate_device_extensions(VkPhysicalDevice vk_gpu, ValInstanceCreateInfo *p_create_info);
-        static std::vector<ValLayer> validate_layers(ValInstanceCreateInfo *p_create_info);
+        static std::vector<ValExtension> validate_instance_extensions(const ValInstanceCreateInfo& p_create_info);
+        static std::vector<ValExtension> validate_device_extensions(VkPhysicalDevice vk_gpu, const ValInstanceCreateInfo& p_create_info);
+        static std::vector<ValLayer> validate_layers(const ValInstanceCreateInfo& p_create_info);
 
-        static VkInstance create_vk_instance(ValInstanceCreateInfo *p_create_info);
-        static ChosenGPU pick_gpu(VkInstance vk_instance, VkSurfaceKHR vk_surface, ValInstanceCreateInfo *p_create_info);
-        static VkDevice create_vk_device(ChosenGPU &vk_gpu, std::vector<ValQueue> &val_queues, ValInstanceCreateInfo *p_create_info);
+        static VkInstance create_vk_instance(const ValInstanceCreateInfo& p_create_info);
+        static ChosenGPU pick_gpu(VkInstance vk_instance, VkSurfaceKHR vk_surface, const ValInstanceCreateInfo& p_create_info);
+        static VkDevice create_vk_device(ChosenGPU &vk_gpu, std::vector<ValQueue> &val_queues, const ValInstanceCreateInfo& p_create_info);
         static VmaAllocator create_vma_allocator(VkInstance vk_instance, VkDevice vk_device, VkPhysicalDevice vk_gpu);
         static VkDescriptorPool create_vk_descriptor_pool(VkDevice vk_device);
 
@@ -116,11 +118,10 @@ namespace VAL {
         VkFormat find_supported_format(const std::vector<VkFormat> &vk_formats, VkImageTiling vk_tiling, VkFormatFeatureFlags vk_feature_flags);
         VkPresentModeKHR find_supported_present_mode(const std::vector<VkPresentModeKHR> &vk_present_modes);
 
-        bool determine_present_info(ValInstancePresentPreferences *p_present_preferences);
+        bool determine_present_info(const ValInstancePresentPreferences &present_preferences);
 
     public:
-        static const char *get_error();
-        static ValInstance *create_val_instance(ValInstanceCreateInfo *p_create_info);
+        ValInstance(const ValInstanceCreateInfo& create_info);
 
         ValQueue get_queue(ValQueue::QueueType type);
 

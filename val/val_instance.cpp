@@ -14,7 +14,7 @@
 namespace VAL {
     ValInstance::CreationError ValInstance::last_error = ValInstance::ERR_NONE;
 
-    std::vector<ValExtension> ValInstance::validate_instance_extensions(ValInstanceCreateInfo *p_create_info) {
+    std::vector<ValExtension> ValInstance::validate_instance_extensions(const ValInstanceCreateInfo& create_info) {
         std::vector<VkExtensionProperties> found_extensions;
         uint32_t found_extension_count;
 
@@ -23,7 +23,7 @@ namespace VAL {
         vkEnumerateInstanceExtensionProperties(nullptr, &found_extension_count, found_extensions.data());
 
         std::vector<ValExtension> missing_extensions;
-        for (const ValExtension &extension: p_create_info->instance_extensions) {
+        for (const ValExtension &extension: create_info.instance_extensions) {
             bool has_extension = false;
             for (VkExtensionProperties properties: found_extensions) {
                 if (strcmp(extension.name, properties.extensionName) == 0) {
@@ -40,7 +40,7 @@ namespace VAL {
         return missing_extensions;
     }
 
-    std::vector<ValExtension> ValInstance::validate_device_extensions(VkPhysicalDevice vk_gpu, ValInstanceCreateInfo *p_create_info) {
+    std::vector<ValExtension> ValInstance::validate_device_extensions(VkPhysicalDevice vk_gpu, const ValInstanceCreateInfo& create_info) {
         std::vector<VkExtensionProperties> found_extensions;
         uint32_t found_extension_count;
 
@@ -49,7 +49,7 @@ namespace VAL {
         vkEnumerateDeviceExtensionProperties(vk_gpu, nullptr, &found_extension_count, found_extensions.data());
 
         std::vector<ValExtension> missing_extensions;
-        for (const ValExtension &extension: p_create_info->instance_extensions) {
+        for (const ValExtension &extension: create_info.instance_extensions) {
             bool has_extension = false;
             for (VkExtensionProperties properties: found_extensions) {
                 if (strcmp(extension.name, properties.extensionName) == 0) {
@@ -66,7 +66,7 @@ namespace VAL {
         return missing_extensions;
     }
 
-    std::vector<ValLayer> ValInstance::validate_layers(ValInstanceCreateInfo *p_create_info) {
+    std::vector<ValLayer> ValInstance::validate_layers(const ValInstanceCreateInfo& create_info) {
         std::vector<VkLayerProperties> found_layers;
         uint32_t found_layer_count;
 
@@ -75,7 +75,7 @@ namespace VAL {
         vkEnumerateInstanceLayerProperties(&found_layer_count, found_layers.data());
 
         std::vector<ValLayer> missing_layers;
-        for (const ValLayer &layer: p_create_info->validation_layers) {
+        for (const ValLayer &layer: create_info.validation_layers) {
             bool has_layer = false;
             for (VkLayerProperties properties: found_layers) {
                 if (strcmp(layer.name, properties.layerName) == 0) {
@@ -92,63 +92,44 @@ namespace VAL {
         return missing_layers;
     }
 
-    const char *ValInstance::get_error() {
-        switch (last_error) {
-            default:
-                return nullptr;
-
-            case ValInstance::ERR_CREATE_INFO_NULLPTR:
-                return "p_create_info was nullpr!";
-
-            case ValInstance::ERR_VK_INSTANCE_FAILURE:
-                return "Failed to create VkInstance!";
-
-            case ValInstance::ERR_VK_DEVICE_FAILURE:
-                return "Failed to create VkDevice!";
-
-            case ValInstance::ERR_VK_GPU_MISSING:
-                return "Failed to find a suitable Vulkan supported GPU!";
-        }
-    }
-
-    VkInstance ValInstance::create_vk_instance(ValInstanceCreateInfo *p_create_info) {
+    VkInstance ValInstance::create_vk_instance(const ValInstanceCreateInfo& create_info) {
         VkInstance vk_instance = nullptr;
 
         uint32_t application_version = VK_MAKE_VERSION(
-                p_create_info->application_major_version,
-                p_create_info->application_minor_version,
-                p_create_info->application_patch_version);
+                create_info.app_major_version,
+                create_info.app_minor_version,
+                create_info.app_patch_version);
 
         uint32_t engine_version = VK_MAKE_VERSION(
-                p_create_info->engine_major_version,
-                p_create_info->engine_minor_version,
-                p_create_info->engine_patch_version);
+                create_info.engine_major_version,
+                create_info.engine_minor_version,
+                create_info.engine_patch_version);
 
         uint32_t vulkan_version;
 
-        switch (p_create_info->version) {
+        switch (create_info.version) {
             default:
                 vulkan_version = VK_API_VERSION_1_0;
                 break;
 
-            case ValInstanceCreateInfo::API_VERSION_1_1:
+            case ValInstanceCreateInfo::VulkanAPIVersion::Version1_1:
                 vulkan_version = VK_API_VERSION_1_1;
                 break;
 
-            case ValInstanceCreateInfo::API_VERSION_1_2:
+            case ValInstanceCreateInfo::VulkanAPIVersion::Version1_2:
                 vulkan_version = VK_API_VERSION_1_2;
                 break;
 
-            case ValInstanceCreateInfo::API_VERSION_1_3:
+            case ValInstanceCreateInfo::VulkanAPIVersion::Version1_3:
                 vulkan_version = VK_API_VERSION_1_3;
                 break;
         }
 
         VkApplicationInfo app_info{};
         app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-        app_info.pApplicationName = p_create_info->application_name.c_str();
+        app_info.pApplicationName = create_info.app_name.c_str();
         app_info.applicationVersion = application_version;
-        app_info.pEngineName = p_create_info->engine_name.c_str();
+        app_info.pEngineName = create_info.engine_name.c_str();
         app_info.engineVersion = engine_version;
         app_info.apiVersion = vulkan_version;
 
@@ -160,9 +141,9 @@ namespace VAL {
         // Extensions
         //
         std::vector<const char *> enabled_extensions{};
-        std::vector<ValExtension> missing_extensions = validate_instance_extensions(p_create_info);
+        std::vector<ValExtension> missing_extensions = validate_instance_extensions(create_info);
 
-        for (const ValExtension &extension: p_create_info->instance_extensions) {
+        for (const ValExtension &extension: create_info.instance_extensions) {
             bool missing_extension = false;
             bool mandatory_extension = false;
             for (const ValExtension &missing: missing_extensions) {
@@ -194,9 +175,9 @@ namespace VAL {
         // Layers
         //
         std::vector<const char *> enabled_layers{};
-        std::vector<ValLayer> missing_layers = validate_layers(p_create_info);
+        std::vector<ValLayer> missing_layers = validate_layers(create_info);
 
-        for (const ValLayer &layer: p_create_info->validation_layers) {
+        for (const ValLayer &layer: create_info.validation_layers) {
             bool missing_layer = false;
             bool mandatory_layer = false;
             for (const ValLayer &missing: missing_layers) {
@@ -232,7 +213,7 @@ namespace VAL {
         return vk_instance;
     }
 
-    ValInstance::ChosenGPU ValInstance::pick_gpu(VkInstance vk_instance, VkSurfaceKHR vk_surface, ValInstanceCreateInfo *p_create_info) {
+    ValInstance::ChosenGPU ValInstance::pick_gpu(VkInstance vk_instance, VkSurfaceKHR vk_surface, const ValInstanceCreateInfo& create_info) {
         uint32_t gpu_count;
         std::vector<VkPhysicalDevice> gpus;
 
@@ -262,7 +243,7 @@ namespace VAL {
 
             // TODO: Better queue exclusivity?
             for (VkQueueFamilyProperties queue_family: queue_families) {
-                for (ValQueue::QueueType type: p_create_info->requested_queues) {
+                for (ValQueue::QueueType type: create_info.requested_queues) {
                     // Ensure we haven't already found a suitable queue
                     bool already_found = false;
 
@@ -329,7 +310,7 @@ namespace VAL {
             // TODO: Config option to manually decide GPU?
             // TODO: Go through ALL GPUs and don't pick the first supported GPU as the default always!
 
-            if (queues.size() != p_create_info->requested_queues.size()) {
+            if (queues.size() != create_info.requested_queues.size()) {
                 continue;
             }
 
@@ -339,7 +320,7 @@ namespace VAL {
 
             for (int f = 0; f < num_features; f++) {
                 VkBool32 has = (&features.robustBufferAccess)[f];
-                VkBool32 requested = (&p_create_info->vk_enabled_features.robustBufferAccess)[f];
+                VkBool32 requested = (&create_info.vk_enabled_features.robustBufferAccess)[f];
 
                 (&enabled_features.robustBufferAccess)[f] = has && requested;
             }
@@ -350,7 +331,7 @@ namespace VAL {
         return ValInstance::ChosenGPU{};
     }
 
-    VkDevice ValInstance::create_vk_device(ChosenGPU &vk_gpu, std::vector<ValQueue> &val_queues, ValInstanceCreateInfo *p_create_info) {
+    VkDevice ValInstance::create_vk_device(ChosenGPU &vk_gpu, std::vector<ValQueue> &val_queues, const ValInstanceCreateInfo& create_info) {
         VkDevice vk_device = nullptr;
 
         std::vector<uint32_t> device_queues;
@@ -382,9 +363,9 @@ namespace VAL {
         // Extensions
         //
         std::vector<const char *> enabled_extensions{};
-        std::vector<ValExtension> missing_extensions = validate_device_extensions(vk_gpu.vk_device, p_create_info);
+        std::vector<ValExtension> missing_extensions = validate_device_extensions(vk_gpu.vk_device, create_info);
 
-        for (const ValExtension &extension: p_create_info->device_extensions) {
+        for (const ValExtension &extension: create_info.device_extensions) {
             bool missing_extension = false;
             bool mandatory_extension = false;
             for (const ValExtension &missing: missing_extensions) {
@@ -568,22 +549,18 @@ namespace VAL {
         return VK_PRESENT_MODE_FIFO_KHR;
     }
 
-    bool ValInstance::determine_present_info(ValInstancePresentPreferences *p_present_preferences) {
-        if (p_present_preferences == nullptr) {
-            return false;
-        }
-
+    bool ValInstance::determine_present_info(const ValInstancePresentPreferences &present_preferences) {
         // Try to guess a fitting present format
         std::vector<VkFormat> vk_formats;
         std::vector<VkFormat> vk_depth_formats;
 
-        if (p_present_preferences->use_sRGB) {
+        if (present_preferences.sRGB) {
             vk_formats.push_back(VK_FORMAT_B8G8R8A8_SRGB);
         } else {
             vk_formats.push_back(VK_FORMAT_B8G8R8A8_UNORM);
         }
 
-        if (p_present_preferences->use_32bit_depth) {
+        if (present_preferences.depth32Bit) {
             vk_formats.push_back(VK_FORMAT_D32_SFLOAT_S8_UINT);
         }
 
@@ -594,7 +571,7 @@ namespace VAL {
         // Try to guess a fitting present mode
         std::vector<VkPresentModeKHR> vk_present_modes;
 
-        if (p_present_preferences->use_vsync) {
+        if (present_preferences.vsync) {
             vk_present_modes.push_back(VK_PRESENT_MODE_FIFO_KHR);
             vk_present_modes.push_back(VK_PRESENT_MODE_FIFO_RELAXED_KHR);
         }
@@ -612,83 +589,68 @@ namespace VAL {
 
         present_info->vk_color_format = vk_color_format;
         present_info->vk_depth_format = vk_depth_format;
-        present_info->vk_colorspace = VK_COLORSPACE_SRGB_NONLINEAR_KHR;
+        present_info->vk_color_space = VK_COLORSPACE_SRGB_NONLINEAR_KHR;
         present_info->vk_present_mode = vk_present_mode;
 
         return true;
     }
 
-    ValInstance *ValInstance::create_val_instance(ValInstanceCreateInfo *p_create_info) {
-        if (p_create_info == nullptr) {
-            return nullptr;
-        }
-
-        VkInstance vk_instance = create_vk_instance(p_create_info);
-        if (vk_instance == nullptr) {
-            if (last_error == ERR_NONE) {
-                last_error = ERR_VK_INSTANCE_FAILURE;
-            }
-
-            return nullptr;
-        }
-
-        ValInstance *instance = new ValInstance();
-
-        instance->vk_instance = vk_instance;
+    ValInstance::ValInstance(const ValInstanceCreateInfo& create_info) {
+        vk_instance = create_vk_instance(create_info);
 
 #ifdef SDL_SUPPORT
+        // TODO: Replace this stupid way of creating render targets
         ValRenderTargetCreateInfo window_create_info{};
-        window_create_info.p_window = p_create_info->p_sdl_window;
+        window_create_info.p_window = create_info.p_sdl_window;
         window_create_info.initialize_swapchain = false;
         window_create_info.type = ValRenderTargetCreateInfo::RENDER_TARGET_TYPE_WINDOW;
 
-        ValWindowRenderTarget *main_window = static_cast<ValWindowRenderTarget *>(ValRenderTarget::create_render_target(&window_create_info, instance));
+        ValWindowRenderTarget *main_window = static_cast<ValWindowRenderTarget *>(ValRenderTarget::create_render_target(&window_create_info, this));
 #endif
 
         // TODO: Proper multiple window support (thanks windows for making presenting harder :| )
-        ChosenGPU gpu = pick_gpu(vk_instance, main_window->vk_surface, p_create_info);
-        VkDevice vk_device = create_vk_device(gpu, gpu.queues, p_create_info);
+        ChosenGPU gpu = pick_gpu(vk_instance, main_window->vk_surface, create_info);
+        vk_device = create_vk_device(gpu, gpu.queues, create_info);
 
-        instance->vk_physical_device = gpu.vk_device;
-        instance->val_queues = gpu.queues;
-        instance->vk_device = vk_device;
+        vk_physical_device = gpu.vk_device;
+        val_queues = gpu.queues;
 
-        for (ValQueue &queue: instance->val_queues) {
-            queue.create_pool(instance);
+        for (ValQueue &queue: val_queues) {
+            queue.create_pool(this);
         }
 
-        instance->vma_allocator = create_vma_allocator(vk_instance, vk_device, gpu.vk_device);
+        vma_allocator = create_vma_allocator(vk_instance, vk_device, gpu.vk_device);
 
-        instance->vk_image_available_semaphore = create_vk_semaphore(vk_device);
-        instance->vk_render_finished_semaphore = create_vk_semaphore(vk_device);
-        instance->vk_render_fence = create_vk_fence(vk_device);
+        vk_image_available_semaphore = create_vk_semaphore(vk_device);
+        vk_render_finished_semaphore = create_vk_semaphore(vk_device);
+        vk_render_fence = create_vk_fence(vk_device);
 
-        instance->vk_descriptor_pool = create_vk_descriptor_pool(vk_device);
+        vk_descriptor_pool = create_vk_descriptor_pool(vk_device);
 
 #ifdef SDL_SUPPORT
         // We need to cache all the possible present modes and formats first
-        instance->cache_surface_info(vk_instance, main_window->vk_surface, gpu.vk_device);
+        cache_surface_info(vk_instance, main_window->vk_surface, gpu.vk_device);
 
         // Then we need to find an adequate that the user prefers
         // We have two ways of determining this
         // The user can use a "ValPresentPreferenceInfo" to automatically decide
         // Or the user can provide a list of formats and present modes they prefer
-        if (p_create_info->p_present_preferences == nullptr) {
+        if (!create_info.present_preferences) {
             // User provided formats
-            VkFormat vk_color_format = instance->find_supported_surface_format(p_create_info->vk_color_formats);
-            VkFormat vk_depth_format = instance->find_supported_format(p_create_info->vk_depth_formats,
+            VkFormat vk_color_format = find_supported_surface_format(create_info.vk_color_formats);
+            VkFormat vk_depth_format = find_supported_format(create_info.vk_depth_formats,
                                                                        VK_IMAGE_TILING_OPTIMAL,
                                                                        VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
-            VkPresentModeKHR vk_present_mode = instance->find_supported_present_mode(p_create_info->vk_present_modes);
+            VkPresentModeKHR vk_present_mode = find_supported_present_mode(create_info.vk_present_modes);
 
-            instance->present_info = new ValPresentInfo();
+            present_info = new ValPresentInfo();
 
-            instance->present_info->vk_color_format = vk_color_format;
-            instance->present_info->vk_depth_format = vk_depth_format;
-            instance->present_info->vk_colorspace = VK_COLORSPACE_SRGB_NONLINEAR_KHR;
-            instance->present_info->vk_present_mode = vk_present_mode;
+            present_info->vk_color_format = vk_color_format;
+            present_info->vk_depth_format = vk_depth_format;
+            present_info->vk_color_space = VK_COLORSPACE_SRGB_NONLINEAR_KHR;
+            present_info->vk_present_mode = vk_present_mode;
         } else {
-            instance->determine_present_info(p_create_info->p_present_preferences);
+            determine_present_info(create_info.present_preferences.value());
         }
 
         //ValWindowRenderTarget::PresentInfo* present_info = main_window->get_present_info(gpu.vk_device);
@@ -696,11 +658,10 @@ namespace VAL {
 
         // We create a default render pass that has 1 color and 1 depth input
         // The user has access to the main render target we've created, it is up to them to initialize it
-        instance->val_main_window = main_window;
+        val_main_window = main_window;
 #endif
-
-        return instance;
     }
+
     ValQueue ValInstance::get_queue(ValQueue::QueueType type) {
         for (ValQueue &queue: val_queues) {
             if (queue.type == type) {
