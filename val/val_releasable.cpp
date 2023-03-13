@@ -1,9 +1,11 @@
-#include "val_releasable.h"
+#include "val_releasable.hpp"
 
-#include <val/val_instance.h>
+#include <val/val_instance.hpp>
 
-void ValReleasable::release(ValInstance *p_val_instance) {
-    if (!p_val_instance->block_await) {
-        p_val_instance->await_frame();
+namespace val {
+    void ValReleasable::release(ValInstance *p_val_instance) {
+        if (!p_val_instance->block_await) {
+            p_val_instance->await_frame();
+        }
     }
 }

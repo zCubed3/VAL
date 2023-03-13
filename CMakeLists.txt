@@ -54,3 +54,5 @@ endif()
 if (VAL_DEBUG)
     target_compile_definitions(VAL PUBLIC DEBUG)
 endif()
+
+set(VAL_INCLUDE_DIRS ${VAL_INCLUDE_DIRS} PARENT_SCOPE)

@@ -1,4 +1,4 @@
-#include "val_vertex_input_builder.h"
+#include "val_vertex_input_builder.hpp"
 
 void ValVertexInputBuilder::push_attribute(AttributeDataType type) {
     uint32_t size;
